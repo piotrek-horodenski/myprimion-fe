@@ -1,0 +1,327 @@
+<script setup lang="ts">
+import moment from 'moment'
+import { ref } from 'vue'
+import {
+  VisAxis,
+  VisXYContainer,
+  VisGroupedBar,
+} from '@unovis/vue'
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import {
+  Pagination,
+  PaginationEllipsis,
+  PaginationFirst,
+  PaginationLast,
+  PaginationList,
+  PaginationListItem,
+  PaginationNext,
+  PaginationPrev,
+} from '@/components/ui/pagination'
+
+const currentPage = ref(1)
+
+const possibleAlerts = ['info', 'success', 'warning', 'error']
+const possibleColors = ['outline', '', 'secondary', 'destructive']
+const possibleInputs = [
+  'temperature',
+  'smoke',
+  'door',
+  'window',
+]
+const possibleIcons = [
+  'thermometer',
+  'emergency_heat',
+  'door_open',
+  'toolbar',
+]
+
+const timeStamp0 = new Date().getTime()
+
+function uuidv4() {
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+  );
+}
+
+const events = Array.from(new Array(10))
+  .map(() => {
+    const random = Math.random() * 50000
+    const statusType = Math.floor(Math.random() * possibleAlerts.length)
+    const inputType = Math.floor(Math.random() * possibleInputs.length)
+    let params = ''
+    if (statusType === 3 && inputType === 1) {
+      params = 'Fire detected!'
+    }
+    if (statusType === 2 && inputType === 0) {
+      params = 'Temperature rising!'
+    }
+    if (statusType === 3 && inputType === 0) {
+      params = 'Temperature too hight!'
+    }
+    if (statusType === 0 && inputType === 0) {
+      params = 'Temperature falling.'
+    }
+    if (statusType === 1 && inputType === 0) {
+      params = 'Temperature normal.'
+    }
+    return {
+      id: uuidv4(),
+      timeStamp: moment(new Date(timeStamp0 - random)).format('yyyy-MM-DD HH:mm:ss'),
+      status: possibleAlerts[statusType],
+      color: possibleColors[statusType],
+      inputType: possibleInputs[inputType],
+      icon: possibleIcons[inputType],
+      params,
+      floorId: uuidv4(),
+    }
+  })
+
+const data2 = [
+  {
+    x: 1,
+    y: 55,
+    y1: 33,
+    y2: 22,
+    y3: 2,
+  },
+  {
+    x: 2,
+    y: 33,
+    y1: 22,
+    y2: 15,
+    y3: 4,
+  },
+  {
+    x: 3,
+    y: 22,
+    y1: 15,
+    y2: 66,
+    y3: 1,
+  },
+  {
+    x: 4,
+    y: 15,
+    y1: 26,
+    y2: 55,
+    y3: 20,
+  },
+]
+const d2x = (d: DataRecord) => d.x
+const d2y = [
+  (d: DataRecord) => d.y,
+  (d: DataRecord) => d.y1,
+  (d: DataRecord) => d.y2,
+  (d: DataRecord) => d.y3
+]
+
+</script>
+<template>
+<div class="p-4 w-full h-full">
+  <div class="flex flex-row justify-between">
+    <Drawer>
+      <DrawerTrigger as-child>
+        <Button variant="outline">
+          Show chart
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <div class="mx-auto w-full max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle class="text-center">Last 4 days</DrawerTitle>
+            <DrawerDescription class="text-center">Sensors status occurences</DrawerDescription>
+          </DrawerHeader>
+        </div>
+        <div class="mx-auto w-full">
+          <div class="p-4 pb-0">
+            <VisXYContainer :data="data2">
+              <VisGroupedBar :x="d2x" :y="d2y" />
+              <VisAxis type="x" />
+              <VisAxis type="y" />
+            </VisXYContainer>
+          </div>
+          <DrawerFooter>
+            <DrawerClose as-child>
+              <Button variant="outline">
+                Close
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+    <Pagination
+      v-slot="{ page }"
+      :total="100"
+      :sibling-count="1"
+      show-edges
+      v-model:page="currentPage"
+      :default-page="1"
+      class="text-right"
+    >
+      <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+        <PaginationFirst />
+        <PaginationPrev />
+
+        <template v-for="(item, index) in items">
+          <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
+            <Button class="w-9 h-9 p-0" :variant="item.value === page ? 'default' : 'outline'">
+              {{ item.value }}
+            </Button>
+          </PaginationListItem>
+          <PaginationEllipsis v-else :key="item.type" :index="index" />
+        </template>
+
+        <PaginationNext />
+        <PaginationLast />
+      </PaginationList>
+    </Pagination>
+  </div>
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>
+          <span
+            v-tooltip="{ content: 'Date and time of the event' }"
+          >Date time</span>
+        </TableHead>
+        <TableHead class="w-[130px]"><span
+            v-tooltip="{ content: 'Event status' }"
+          >Status</span></TableHead>
+        <TableHead><span
+            v-tooltip="{ content: 'Sensor type' }"
+          >Type</span></TableHead>
+        <TableHead><span
+            v-tooltip="{ content: 'Event details' }"
+          >Details</span></TableHead>
+        <TableHead><span
+            v-tooltip="{ content: 'Id of the floor' }"
+          >Floor Id</span></TableHead>
+        <TableHead><span
+            v-tooltip="{ content: 'Id of the sensor' }"
+          >Sensor Id</span></TableHead>
+        <TableHead class="text-right">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow
+        v-for="event in events"
+        :key="event.id"
+      >
+        <TableCell class="font-medium">
+          {{ event.timeStamp }}
+        </TableCell>
+        <TableCell><Badge
+          :class="'badge-' + event.status"
+          :variant="event.color || ''"
+        >{{ event.status }}</Badge></TableCell>
+        <TableCell>
+          <span v-tooltip="{ content: 'Sensor type: ' + event.inputType }">
+            <em class="material-symbols-outlined cursor-pointer">{{ event.icon }}</em>
+          </span>
+        </TableCell>
+        <TableCell>{{ event.params }}</TableCell>
+        <TableCell><strong>{{ event.floorId }}</strong></TableCell>
+        <TableCell><strong>{{ event.id }}</strong></TableCell>
+        <TableCell class="text-right">
+          <Popover>
+            <PopoverTrigger as-child>
+              <Button variant="outline">
+                <em class="material-symbols-outlined cursor-pointer">more_vert</em>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-60">
+              <div class="grid gap-4">
+                <div class="space-y-2">
+                  <h4 class="font-medium leading-none">
+                    Actions
+                  </h4>
+                  <p class="text-sm text-muted-foreground">
+                    Decide what to do
+                  </p>
+                </div>
+                <div class="grid gap-2">
+                  <div class="items-center gap-4">
+                    <Button class="w-full">Go to sensor details</Button>
+                  </div>
+                  <div class="items-center gap-4">
+                    <Button variant="outline" class="w-full">Filter {{ event.inputType }} events</Button>
+                  </div>
+                  <div class="items-center gap-4">
+                    <Button variant="outline" class="w-full">Filter {{ event.status }} events</Button>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+  <div class="flex flex-row justify-end">
+    <Pagination
+      v-slot="{ page }"
+      :total="100"
+      :sibling-count="1"
+      show-edges
+      :default-page="1"
+      v-model:page="currentPage"
+    >
+      <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+        <PaginationFirst />
+        <PaginationPrev />
+
+        <template v-for="(item, index) in items">
+          <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
+            <Button class="w-9 h-9 p-0" :variant="item.value === page ? 'default' : 'outline'">
+              {{ item.value }}
+            </Button>
+          </PaginationListItem>
+          <PaginationEllipsis v-else :key="item.type" :index="index" />
+        </template>
+
+        <PaginationNext />
+        <PaginationLast />
+      </PaginationList>
+    </Pagination>
+  </div>
+</div>
+</template>
+<style scoped>
+.badge-success {
+  background-color: var(--vis-color3) !important;
+  color: #000;
+}
+
+.badge-info {
+  background-color: var(--vis-color0) !important;
+  color: #fff;
+}
+.badge-warning {
+  background-color: var(--vis-color2) !important;
+}
+</style>
