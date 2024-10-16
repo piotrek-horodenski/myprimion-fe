@@ -60,8 +60,26 @@ const markersLatLngs = [
 ]
 
 const geomCenter = computed(() => {
-  const num = markersLatLngs.length
-  const sum = markersLatLngs.reduce((prev, curr) => {
+  const minLat = markersLatLngs.find((marker) => {
+    return marker.lat === Math.min(...markersLatLngs.map((marker) => marker.lat))
+  })
+  const maxLat = markersLatLngs.find((marker) => {
+    return marker.lat === Math.max(...markersLatLngs.map((marker) => marker.lat))
+  })
+  const minLng = markersLatLngs.find((marker) => {
+    return marker.lng === Math.min(...markersLatLngs.map((marker) => marker.lng))
+  })
+  const maxLng = markersLatLngs.find((marker) => {
+    return marker.lng === Math.max(...markersLatLngs.map((marker) => marker.lng))
+  })
+  const borders = [
+    minLat,
+    maxLat,
+    minLng, 
+    maxLng,
+  ]
+  const num = borders.length
+  const sum = borders.reduce((prev, curr) => {
     return {
       lat: prev.lat + curr.lat,
       lng: prev.lng + curr.lng,
