@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import moment from 'moment'
-import { ref } from 'vue'
 import {
   VisAxis,
   VisXYContainer,
   VisGroupedBar,
 } from '@unovis/vue'
 
+import { useIncidentsStore } from '@/stores/incidents.store'
 import {
   Table,
   TableBody,
@@ -42,8 +44,68 @@ import {
   PaginationNext,
   PaginationPrev,
 } from '@/components/ui/pagination'
+import { IIncidentSeverity, IIncidentTypeEnum } from '@/stores/incidents.model'
+import { howLongAgo } from '@/lib/how-long-ago.service'
 
 const currentPage = ref(1)
+const { updateOffsetLimit } = useIncidentsStore()
+const { incidents } = storeToRefs(useIncidentsStore())
+const currentTime = ref(new Date().getTime())
+const interval = ref<any>(null)
+const knownIds = ref<[]>([])
+const isSetup = ref<boolean>(true)
+const currentIncidents = computed(() => {
+  return incidents.value
+    // .sort((a, b) => {
+    //   return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    // })
+    .slice((currentPage.value - 1) * 10, currentPage.value * 10)
+    .map(incident => {
+      return {
+        ...incident,
+        howLongAgo: howLongAgo(incident.created || new Date(incident.timestamp).getTime(), currentTime.value),
+        classes: knownIds.value.includes(incident.id) || isSetup.value ? '' : 'background-red',
+      }
+    })
+})
+
+watch(() => incidents, () => {
+  setTimeout(() => {
+    incidents.value.forEach(incident => {
+      if (!knownIds.value.includes(incident.id)) {
+        knownIds.value.push(incident.id)
+      }
+    })
+  }, 100)
+}, { immediate: true, deep: true })
+
+const iconsByIncidentType = {
+  [IIncidentTypeEnum.LOW_BATTERY]: 'battery_0_bar',
+  [IIncidentTypeEnum.HUMIDITY_TO_LOW]: 'humidity_low',
+  [IIncidentTypeEnum.TEMP_WARNING]: 'device_thermostat',
+  [IIncidentTypeEnum.TEMP_ALERT]: 'device_thermostat',
+}
+
+const colorByIncidentType = {
+  [IIncidentTypeEnum.LOW_BATTERY]: 'warning',
+  [IIncidentTypeEnum.HUMIDITY_TO_LOW]: 'warning',
+  [IIncidentTypeEnum.TEMP_WARNING]: 'warning',
+  [IIncidentTypeEnum.TEMP_ALERT]: 'error',
+}
+
+const colorByIncidentSeverity = {
+  [IIncidentSeverity.LOW]: 'success',
+  [IIncidentSeverity.MINOR]: 'info',
+  [IIncidentSeverity.MAJOR]: 'warning',
+  [IIncidentSeverity.CRITICAL]: 'error',
+}
+
+const variantByIncidentSeverity = {
+  [IIncidentSeverity.LOW]: '',
+  [IIncidentSeverity.MINOR]: 'outline',
+  [IIncidentSeverity.MAJOR]: 'secondary',
+  [IIncidentSeverity.CRITICAL]: 'destructive',
+}
 
 const possibleAlerts = ['info', 'success', 'warning', 'error']
 const possibleColors = ['outline', '', 'secondary', 'destructive']
@@ -66,6 +128,17 @@ function uuidv4() {
   return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
     (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
   );
+}
+
+function incidentTypeName(value) {
+  const values = {
+    LOW_BATTERY: 'Low battery level',
+    HUMIDITY_TO_LOW: 'Humidity to low',
+    TEMP_WARNING: 'Temperature sensor warning',
+    TEMP_ALERT: 'Temperature sensor alert',
+  }
+
+  return values[value]
 }
 
 const events = Array.from(new Array(10))
@@ -139,6 +212,26 @@ const d2y = [
   (d: DataRecord) => d.y3
 ]
 
+function formatDateTime(timestamp: string) {
+  const d = moment(timestamp)
+
+  return d.format('YYYY-MM-DD HH:mm:ss')
+}
+
+onMounted(() => {
+  interval.value = setInterval(() => {
+    currentTime.value = new Date().getTime()
+  }, 50)
+
+  setTimeout(() => {
+    isSetup.value = false
+  }, 300)
+})
+
+onUnmounted(() => {
+  clearInterval(interval.value)
+})
+
 </script>
 <template>
 <div class="p-4 w-full h-full">
@@ -176,7 +269,7 @@ const d2y = [
     </Drawer>
     <Pagination
       v-slot="{ page }"
-      :total="100"
+      :total="incidents.length"
       :sibling-count="1"
       show-edges
       v-model:page="currentPage"
@@ -206,47 +299,59 @@ const d2y = [
       <TableRow>
         <TableHead>
           <span
-            v-tooltip="{ content: 'Date and time of the event' }"
+            v-tooltip="{ content: 'Date and time of the incident' }"
           >Date time</span>
         </TableHead>
         <TableHead class="w-[130px]"><span
-            v-tooltip="{ content: 'Event status' }"
-          >Status</span></TableHead>
+            v-tooltip="{ content: 'Incident severity' }"
+          >Severity</span></TableHead>
         <TableHead><span
-            v-tooltip="{ content: 'Sensor type' }"
+            v-tooltip="{ content: 'Incident type' }"
           >Type</span></TableHead>
         <TableHead><span
-            v-tooltip="{ content: 'Event details' }"
+            v-tooltip="{ content: 'Incident details' }"
           >Details</span></TableHead>
         <TableHead><span
-            v-tooltip="{ content: 'Id of the floor' }"
-          >Floor Id</span></TableHead>
-        <TableHead><span
-            v-tooltip="{ content: 'Id of the sensor' }"
-          >Sensor Id</span></TableHead>
+            v-tooltip="{ content: 'Room name' }"
+          >Room</span></TableHead>
         <TableHead class="text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       <TableRow
-        v-for="event in events"
-        :key="event.id"
+        v-for="(incident, idx) in currentIncidents"
+        :key="incident.id"
+        class="background-animated"
+        :class="incident.classes"
       >
         <TableCell class="font-medium">
-          {{ event.timeStamp }}
-        </TableCell>
-        <TableCell><Badge
-          :class="'badge-' + event.status"
-          :variant="event.color || ''"
-        >{{ event.status }}</Badge></TableCell>
-        <TableCell>
-          <span v-tooltip="{ content: 'Sensor type: ' + event.inputType }">
-            <em class="material-symbols-outlined cursor-pointer">{{ event.icon }}</em>
+          <span
+            v-tooltip="{
+              content: incident.howLongAgo + ' ago'
+            }"
+          >
+            {{ formatDateTime(incident.timestamp) }}
           </span>
         </TableCell>
-        <TableCell>{{ event.params }}</TableCell>
-        <TableCell><strong>{{ event.floorId }}</strong></TableCell>
-        <TableCell><strong>{{ event.id }}</strong></TableCell>
+        <TableCell>
+          <Badge
+            class="badge"
+            :class="'badge-' + colorByIncidentSeverity[incident.severity]"
+            :variant="variantByIncidentSeverity[incident.severity] || ''"
+          >{{ incident.severity }}</Badge>
+          
+        </TableCell>
+        <TableCell>
+          <em
+            class="material-symbols-outlined cursor-pointer incident-type"
+            :class="colorByIncidentType[incident.incidentType]"
+            v-tooltip="{
+              content: incidentTypeName(incident.incidentType)
+            }"
+          >{{ iconsByIncidentType[incident.incidentType] }}</em>
+        </TableCell>
+        <TableCell>{{ incident.incidentDescription }}</TableCell>
+        <TableCell><strong>{{ incident.roomName }}</strong></TableCell>
         <TableCell class="text-right">
           <Popover>
             <PopoverTrigger as-child>
@@ -269,10 +374,10 @@ const d2y = [
                     <Button class="w-full">Go to sensor details</Button>
                   </div>
                   <div class="items-center gap-4">
-                    <Button variant="outline" class="w-full">Filter {{ event.inputType }} events</Button>
+                    <Button variant="outline" class="w-full">Filter {{ incident.incidentType }} incidents</Button>
                   </div>
                   <div class="items-center gap-4">
-                    <Button variant="outline" class="w-full">Filter {{ event.status }} events</Button>
+                    <Button variant="outline" class="w-full">Filter {{ incident.severity }} incidents</Button>
                   </div>
                 </div>
               </div>
@@ -285,7 +390,7 @@ const d2y = [
   <div class="flex flex-row justify-end">
     <Pagination
       v-slot="{ page }"
-      :total="100"
+      :total="incidents.length"
       :sibling-count="1"
       show-edges
       :default-page="1"
@@ -311,7 +416,8 @@ const d2y = [
   </div>
 </div>
 </template>
-<style scoped>
+<style type="scss" scoped>
+
 .badge-success {
   background-color: var(--vis-color3) !important;
   color: #000;
@@ -324,4 +430,26 @@ const d2y = [
 .badge-warning {
   background-color: var(--vis-color2) !important;
 }
+
+.incident-type {
+  text-shadow: .5px .5px 2px rgba(0, 0, 0, .7);
+
+  &.warning {
+    color: var(--vis-color2);
+  }
+
+  &.error {
+    color: hsl(var(--destructive));
+  }
+}
+
+.background-animated {
+  background-color: rgba(243, 195, 0, 0);
+  transition: background-color 2s ease-in-out;
+}
+
+.background-red {
+  background-color:rgba(243, 195, 0, 0.3);
+}
+
 </style>

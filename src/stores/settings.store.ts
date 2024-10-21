@@ -4,14 +4,14 @@ import { ref } from 'vue'
 import { ISettings } from './incidents.model'
 import axios from 'axios'
 
-export const defualtSettings = {
+export const defualtSettings: ISettings = {
   incidents: {
     api: '192.168.162.235',
     apiPort: 9666,
-    apiPath: '/pinot',
+    apiPath: '/pinot-api',
     sse: '192.168.162.235',
     ssePort: 9666,
-    ssePath: '/sse',
+    ssePath: '/pinot-api',
   },
 }
 

@@ -33,45 +33,58 @@ function toggle() {
 
 <template>
 <div class="flex">
-  <main
-    :class="{
-      'toggled': toggled,
-    }"
-  >
-    <RouterView />
-  </main>
-  <nav
-    class="justify-left"
-    :class="{
-      'toggled': toggled,
-    }"
-  >
-    <div class="nav-wrapper">
-      <div class="logo">
-        <img src="/logo.png" alt="My Primion" />
-      </div>
-      <ul>
-        <li
-          v-for="(route, index) in routes"
-          :key="route.path"
-        >
-          <RouterLink
-            :class="routesActive[index].classes"
-            :to="route.path"
-          ><em class="material-symbols-outlined">{{ route.meta.icon }}</em> {{ route.meta.label }}</RouterLink>
-        </li>
-      </ul>
-    </div>
-    <div
-      class="toggle"
+  <template v-if="isLoading">
+    please wait
+  </template>
+  <template v-else>
+    <main
       :class="{
         'toggled': toggled,
       }"
-      @click="toggle"
     >
-      <em class="material-symbols-outlined">{{ toggled ? 'chevron_left' : 'chevron_right' }}</em>
-    </div>
-  </nav>
+      <div
+        v-if="$route.name !== 'map'"
+        class="black-header"
+      >
+        {{ $route.meta.label }}
+      </div>
+      <div class="route-wrapper">
+        <RouterView />
+      </div>
+    </main>
+    <nav
+      class="justify-left"
+      :class="{
+        'toggled': toggled,
+      }"
+    >
+      <div class="nav-wrapper">
+        <div class="logo">
+          <img src="/logo.png" alt="My Primion" />
+        </div>
+        <ul>
+          <li
+            v-for="(route, index) in routes"
+            :key="route.path"
+          >
+            <RouterLink
+              :class="routesActive[index].classes"
+              :to="route.path"
+            ><em class="material-symbols-outlined">{{ route.meta.icon }}</em> {{ route.meta.label }}</RouterLink>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="toggle"
+        :class="{
+          'toggled': toggled,
+        }"
+        @click="toggle"
+      >
+        <em class="material-symbols-outlined">{{ toggled ? 'chevron_left' : 'chevron_right' }}</em>
+      </div>
+    </nav>
+  </template>
   <Toaster />
 </div>
 </template>
@@ -80,12 +93,18 @@ function toggle() {
 main {
   background-color: hsl(var(--background));
   box-shadow: inset 6px 0 12px rgba(0, 0, 0, .14);
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   order: 1;
   min-height: 300px;
   min-height: 100vh;
   height: 100vh;
   transition: width .4s ease-in-out;
+}
+
+.route-wrapper {
+  flex-grow: 1;
 }
 
 nav {
@@ -113,8 +132,8 @@ nav {
   }
 
   ul {
-    margin: 0 15px;
-    width: calc(100% - 30px);
+    margin: 0 15px 0 0;
+    width: calc(100% - 15px);
     overflow: hidden;
 
     >li {
@@ -122,7 +141,8 @@ nav {
       width: 100%;
 
       > a {
-        border-radius: 6px;
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
         color: hsl(var(--muted-foreground));
         display: block;
         font-weight: bold;
@@ -147,8 +167,8 @@ nav {
 
 .logo {
   border-bottom: 1.5px solid hsl(var(--border));
-  margin: 0 15px 15px 15px;
-  padding: 40px 40px 40px 20px;
+  margin: 0 15px 15px 0;
+  padding: 40px 40px 40px 40px;
   overflow: hidden;
 
   >img {
@@ -183,6 +203,18 @@ nav {
       left: -1px;
     }
   }
+}
+
+.black-header {
+  background-color: hsl(var(--foreground));
+  color: hsl(var(--background));
+  height: 170px;
+  padding: 15px;
+  flex-shrink: 0;
+  font-size: 1.8em;
+  font-weight: bold;
+  display: flex;
+  align-items: flex-end;
 }
 
 </style>

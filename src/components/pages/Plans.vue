@@ -71,7 +71,7 @@ const tooltipContent2 = `
     <img
       src="/floor-plan.png"
       class="shrink-1 grow-0"
-      alt="camunda"
+      alt="floor"
     />
     <div class="floating">
       <Popover>

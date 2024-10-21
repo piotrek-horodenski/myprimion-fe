@@ -9,43 +9,65 @@ export const useIncidentsStore = defineStore('incidents', () => {
   const incidents = ref<IIncident[]>([])
   const error = ref<any>(null)
   const connectionError = ref<any>(null)
-  const isLoading = ref(false)
+  const isLoading = ref(true)
   const isConnecting = ref(false)
   const { settings, isLoading: isSettingsLoading } = storeToRefs(useSettingsStore())
   const eventSource = ref<EventSource | null>(null)
-  const getPagingQP = (page: number, size: number) => {
-    return `?page=${page}&perPage=${size}`
+  const getPagingQP = (offset: number, limit: number) => {
+    return `?offset=${offset}&limit=${limit}`
   }
   const possibleEvents = [
     {
       type: 'message',
-      action: (data: any) => {
-        console.log('event', 'message', data)
+      action: (event: MessageEvent) => {
+        const candidate = JSON.parse(event.data)
+        const existing = incidents.value.find(i => i.id === candidate.id)
+
+        if (existing) {
+          Object.assign(existing, candidate)
+        } else {
+          incidents.value.unshift({
+            ...candidate,
+            created: new Date().getTime(),
+          })
+        }
       }
     },
   ]
 
-  async function loadIncidents(page: number, size: number) {
+
+  async function loadIncidents(offset: number, limit: number) {
     const path = 'http://' + settings.value.incidents.api +
       ':' + settings.value.incidents.apiPort +
-      settings.value.incidents.apiPath + '/incidents'
+      settings.value.incidents.apiPath + '/pinot/incidents'
 
     try {
-      isLoading.value = true
-      const response = await axios.get(path + getPagingQP(page, size))
+      const response = await axios.get(path + getPagingQP(offset, limit))
 
-      incidents.value = response.data
+      response.data.forEach(i => {
+        if (incidents.value.find(incident => incident.id === i.id)) {
+          return
+        }
+        incidents.value.push(i)
+      })
     } catch (e) {
       error.value = e
     } finally {
-      isLoading.value = false
     }
+
+    await new Promise(resolve => {
+      setTimeout(resolve, 1500)
+    })
+  }
+
+  function updateOffsetLimit(offset: number, limit: number) {
+    loadIncidents(offset, limit)
   }
 
   async function connectToSSE() {
     const path = 'http://' + settings.value.incidents.sse +
       ':' + settings.value.incidents.ssePort +
-      settings.value.incidents.ssePath + '/incidents'
+      settings.value.incidents.ssePath + '/sse/incidents'
     
     try {
       isConnecting.value = true
@@ -63,9 +85,10 @@ export const useIncidentsStore = defineStore('incidents', () => {
     }
   }
 
-  function init() {
+  async function init() {
+    await loadIncidents(0, 10)
+    isLoading.value = false
     connectToSSE()
-    loadIncidents(1, 10)
   }
 
   watch(isSettingsLoading, (value) => {
@@ -74,5 +97,13 @@ export const useIncidentsStore = defineStore('incidents', () => {
     }
   })
 
-  return { incidents, error, connectionError, loadIncidents }
+  return {
+    isLoading,
+    incidents,
+    error,
+    connectionError,
+    isConnecting,
+    loadIncidents,
+    updateOffsetLimit,
+  }
 })
