@@ -1,19 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
-import { ISettings } from './incidents.model'
 import axios from 'axios'
 
-export const defualtSettings: ISettings = {
-  incidents: {
-    api: '192.168.162.235',
-    apiPort: 9666,
-    apiPath: '/pinot-api',
-    sse: '192.168.162.235',
-    ssePort: 9666,
-    ssePath: '/pinot-api',
-  },
-}
+import { ISettings } from './settings.model'
+import { defualtSettings } from './default-settings'
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<ISettings>({

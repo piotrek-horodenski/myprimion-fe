@@ -3,8 +3,6 @@
 import EventsTable from './EventsTable.vue'
 import EventsCharts from './EventsCharts.vue'
 
-
-
 </script>
 <template>
 <div class="flex flex-col gap-4 pt-8">

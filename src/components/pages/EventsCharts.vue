@@ -26,7 +26,6 @@ import {
 
 const goal = ref(6)
 
-type Data = typeof data[number]
 const ddata = computed(() => {
   const goals = [
     { goal: 200 },
@@ -95,15 +94,23 @@ const data2 = [
     y2: 55,
   },
 ]
-const d2x = (d: DataRecord) => d.x
+const d2x = (d) => d.x
 const d2y = [
-    (d: DataRecord) => d.y,
-    (d: DataRecord) => d.y1,
-    (d: DataRecord) => d.y2
+    (d) => d.y,
+    (d) => d.y1,
+    (d) => d.y2
   ]
 
 </script>
 <template>
+<div class="flex flex-row gap-8 justify-around">
+  <div class="chart-title-1">
+    Last Week Events by Severity
+  </div>
+  <div class="chart-title-2">
+    Last 4 days events by Event Source
+  </div>
+</div>
 <div class="flex flex-row gap-8 justify-around">
   <VisSingleContainer :data="data">
     <VisTooltip :triggers="triggers" />
@@ -171,8 +178,8 @@ const d2y = [
                 }"
               >
                 <VisStackedBar
-                  :x="(d: Data, i :number) => i"
-                  :y="(d: Data) => d.goal"
+                  :x="(d, i :number) => i"
+                  :y="(d: any) => d.goal"
                   color="var(--theme-primary)"
                   :bar-padding="0.1"
                   :rounded-corners="0"
@@ -195,12 +202,20 @@ const d2y = [
 </div>
 </template>
 <style scoped>
-.unovis-single-container {
+.unovis-single-container, .chart-title-1 {
   max-width: calc(30% - 2rem);
 }
 
-.unovis-xy-container {
+.unovis-xy-container, .chart-title-2 {
   max-width: calc(70% - 2rem);
+}
+
+.chart-title-1, .chart-title-2 {
+  flex-grow: 1;
+  font-size: 1.3rem;
+  font-weight: bold;
+  padding-bottom: 2rem;
+  text-align: center;
 }
 
 </style>

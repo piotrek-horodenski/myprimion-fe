@@ -4,8 +4,7 @@ export interface ISettings {
 }
 
 export interface ISettingsIncidents {
-  api: string
-  apiPort: number
-  sse: string
-  ssePort: number
+  apiUrl: string
+  sseUrl: string
+  processUrl: string
 }

@@ -24,16 +24,20 @@ const styles = computed(() => {
 onMounted(() => {
 
   function resize() {
-    if (!wrapper.value) {
+    if (!wrapper.value || !wrapper.value.parentNode) {
       return
     }
-    width.value = wrapper.value.parentNode!.offsetWidth
-    height.value = wrapper.value.parentNode!.offsetHeight
+    width.value = (wrapper.value.parentNode as HTMLElement).offsetWidth
+    height.value = (wrapper.value.parentNode as HTMLElement).offsetHeight
   }
 
   resize()
   const observer = new ResizeObserver(resize)
-  observer.observe(wrapper.value!.parentNode)
+
+  if (!wrapper.value || !wrapper.value.parentNode) {
+    return
+  }
+  observer.observe(wrapper.value.parentNode as Element)
 })
 
 const tooltipContent1 = `
@@ -42,9 +46,9 @@ const tooltipContent1 = `
     <em class="material-symbols-outlined cursor-pointer">thermometer</em>
   </div>
   <div class="grow-1">
-    <div>Temperature: <strong>55°C</strong></div>
+    <div>Temperature: <strong>20°C</strong></div>
     <div>Temperature trend: rising</div>
-    <div>Humidity: <strong>13%</strong></div>
+    <div>Humidity: <strong>60%</strong></div>
   </div>
 </div>
 `
@@ -78,7 +82,7 @@ const tooltipContent2 = `
         <PopoverTrigger as-child>
           <Button
             variant="destructive"
-            style="top: -250px; left: -100px"
+            style="top: -80px; left: -80px"
             v-tooltip="{
               content: tooltipContent1,
               html: true,
@@ -131,7 +135,7 @@ const tooltipContent2 = `
 
 img {
   width: 80%;
-  max-width: 1040px;
+  max-width: 650px;
 }
 
 .floating {

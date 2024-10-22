@@ -1,10 +1,7 @@
 {
   "incidents": {
-    "api": "192.168.162.235",
-    "apiPort": 9666,
-    "apiPath": "/pinot-api",
-    "sse": "192.168.162.235",
-    "ssePort": 9666,
-    "ssePath": "/pinot-api"
+    "apiUrl": "http://192.168.162.235:9666/pinot-api",
+    "sseUrl": "http://192.168.162.235:9666/pinot-api",
+    "processUrl": "http://192.168.162.235:18081/processes"
   }
 }

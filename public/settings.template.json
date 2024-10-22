@@ -1,0 +1,7 @@
+{
+  "incidents": {
+    "apiUrl": "{{INCIDENTS_API_URL}}",
+    "sseUrl": "{{INCIDENTS_SSE_URL}}",
+    "processUrl": "{{PROCESS_URL}}"
+  }
+}

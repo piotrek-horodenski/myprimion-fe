@@ -48,11 +48,10 @@ import { IIncidentSeverity, IIncidentTypeEnum } from '@/stores/incidents.model'
 import { howLongAgo } from '@/lib/how-long-ago.service'
 
 const currentPage = ref(1)
-const { updateOffsetLimit } = useIncidentsStore()
 const { incidents } = storeToRefs(useIncidentsStore())
 const currentTime = ref(new Date().getTime())
 const interval = ref<any>(null)
-const knownIds = ref<[]>([])
+const knownIds = ref<string[]>([])
 const isSetup = ref<boolean>(true)
 const currentIncidents = computed(() => {
   return incidents.value
@@ -84,6 +83,8 @@ const iconsByIncidentType = {
   [IIncidentTypeEnum.HUMIDITY_TO_LOW]: 'humidity_low',
   [IIncidentTypeEnum.TEMP_WARNING]: 'device_thermostat',
   [IIncidentTypeEnum.TEMP_ALERT]: 'device_thermostat',
+  [IIncidentTypeEnum.DEVICE_MOVE_ALARM]: 'move_item',
+  [IIncidentTypeEnum.UNAUTHORIZED_ACCESS]: 'do_not_disturb_on',
 }
 
 const colorByIncidentType = {
@@ -91,6 +92,8 @@ const colorByIncidentType = {
   [IIncidentTypeEnum.HUMIDITY_TO_LOW]: 'warning',
   [IIncidentTypeEnum.TEMP_WARNING]: 'warning',
   [IIncidentTypeEnum.TEMP_ALERT]: 'error',
+  [IIncidentTypeEnum.DEVICE_MOVE_ALARM]: 'error',
+  [IIncidentTypeEnum.UNAUTHORIZED_ACCESS]: 'error',
 }
 
 const colorByIncidentSeverity = {
@@ -101,78 +104,24 @@ const colorByIncidentSeverity = {
 }
 
 const variantByIncidentSeverity = {
-  [IIncidentSeverity.LOW]: '',
+  [IIncidentSeverity.LOW]: null,
   [IIncidentSeverity.MINOR]: 'outline',
   [IIncidentSeverity.MAJOR]: 'secondary',
   [IIncidentSeverity.CRITICAL]: 'destructive',
 }
 
-const possibleAlerts = ['info', 'success', 'warning', 'error']
-const possibleColors = ['outline', '', 'secondary', 'destructive']
-const possibleInputs = [
-  'temperature',
-  'smoke',
-  'door',
-  'window',
-]
-const possibleIcons = [
-  'thermometer',
-  'emergency_heat',
-  'door_open',
-  'toolbar',
-]
-
-const timeStamp0 = new Date().getTime()
-
-function uuidv4() {
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-  );
-}
-
 function incidentTypeName(value) {
   const values = {
-    LOW_BATTERY: 'Low battery level',
-    HUMIDITY_TO_LOW: 'Humidity to low',
-    TEMP_WARNING: 'Temperature sensor warning',
-    TEMP_ALERT: 'Temperature sensor alert',
+    [IIncidentTypeEnum.LOW_BATTERY]: 'Low battery level',
+    [IIncidentTypeEnum.HUMIDITY_TO_LOW]: 'Humidity to low',
+    [IIncidentTypeEnum.TEMP_WARNING]: 'Temperature sensor warning',
+    [IIncidentTypeEnum.TEMP_ALERT]: 'Temperature sensor alert',
+    [IIncidentTypeEnum.DEVICE_MOVE_ALARM]: 'Alarm! Device moved',
+    [IIncidentTypeEnum.UNAUTHORIZED_ACCESS]: 'Unauthorized access',
   }
 
   return values[value]
 }
-
-const events = Array.from(new Array(10))
-  .map(() => {
-    const random = Math.random() * 50000
-    const statusType = Math.floor(Math.random() * possibleAlerts.length)
-    const inputType = Math.floor(Math.random() * possibleInputs.length)
-    let params = ''
-    if (statusType === 3 && inputType === 1) {
-      params = 'Fire detected!'
-    }
-    if (statusType === 2 && inputType === 0) {
-      params = 'Temperature rising!'
-    }
-    if (statusType === 3 && inputType === 0) {
-      params = 'Temperature too hight!'
-    }
-    if (statusType === 0 && inputType === 0) {
-      params = 'Temperature falling.'
-    }
-    if (statusType === 1 && inputType === 0) {
-      params = 'Temperature normal.'
-    }
-    return {
-      id: uuidv4(),
-      timeStamp: moment(new Date(timeStamp0 - random)).format('yyyy-MM-DD HH:mm:ss'),
-      status: possibleAlerts[statusType],
-      color: possibleColors[statusType],
-      inputType: possibleInputs[inputType],
-      icon: possibleIcons[inputType],
-      params,
-      floorId: uuidv4(),
-    }
-  })
 
 const data2 = [
   {
@@ -204,12 +153,12 @@ const data2 = [
     y3: 20,
   },
 ]
-const d2x = (d: DataRecord) => d.x
+const d2x = (d) => d.x
 const d2y = [
-  (d: DataRecord) => d.y,
-  (d: DataRecord) => d.y1,
-  (d: DataRecord) => d.y2,
-  (d: DataRecord) => d.y3
+  (d) => d.y,
+  (d) => d.y1,
+  (d) => d.y2,
+  (d) => d.y3
 ]
 
 function formatDateTime(timestamp: string) {
@@ -319,7 +268,7 @@ onUnmounted(() => {
     </TableHeader>
     <TableBody>
       <TableRow
-        v-for="(incident, idx) in currentIncidents"
+        v-for="incident in currentIncidents"
         :key="incident.id"
         class="background-animated"
         :class="incident.classes"
@@ -337,7 +286,7 @@ onUnmounted(() => {
           <Badge
             class="badge"
             :class="'badge-' + colorByIncidentSeverity[incident.severity]"
-            :variant="variantByIncidentSeverity[incident.severity] || ''"
+            :variant="variantByIncidentSeverity[incident.severity] || null"
           >{{ incident.severity }}</Badge>
           
         </TableCell>

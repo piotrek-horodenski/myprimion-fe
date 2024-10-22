@@ -4,6 +4,8 @@ export enum IIncidentTypeEnum {
   HUMIDITY_TO_LOW = 'HUMIDITY_TO_LOW',
   TEMP_WARNING = 'TEMP_WARNING',
   TEMP_ALERT = 'TEMP_ALERT',
+  DEVICE_MOVE_ALARM = 'DEVICE_MOVE_ALARM',
+  UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
 }
 
 export enum IIncidentSeverity {
@@ -31,4 +33,5 @@ export interface IIncident {
   incidentType: IIncidentTypeEnum
   thingMetrics: IMetrics
   severity: IIncidentSeverity
+  created?: string
 }

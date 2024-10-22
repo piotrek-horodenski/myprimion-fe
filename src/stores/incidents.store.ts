@@ -37,9 +37,7 @@ export const useIncidentsStore = defineStore('incidents', () => {
 
 
   async function loadIncidents(offset: number, limit: number) {
-    const path = 'http://' + settings.value.incidents.api +
-      ':' + settings.value.incidents.apiPort +
-      settings.value.incidents.apiPath + '/pinot/incidents'
+    const path = settings.value.incidents.apiUrl + '/pinot/incidents'
 
     try {
       const response = await axios.get(path + getPagingQP(offset, limit))
@@ -65,10 +63,8 @@ export const useIncidentsStore = defineStore('incidents', () => {
   }
 
   async function connectToSSE() {
-    const path = 'http://' + settings.value.incidents.sse +
-      ':' + settings.value.incidents.ssePort +
-      settings.value.incidents.ssePath + '/sse/incidents'
-    
+    const path =  settings.value.incidents.sseUrl  + '/sse/incidents'
+
     try {
       isConnecting.value = true
       eventSource.value = new EventSource(path)

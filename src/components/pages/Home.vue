@@ -52,55 +52,55 @@ onMounted(() => {
         <div class="flex flex-col h-full p-4 gap-4 cursor-pointer">
           <div>
             <Badge
-              :variant="selectedFloor === 0 ? '' : 'secondary'"
+              :variant="selectedFloor === 0 ? null : 'secondary'"
               @click="selectedFloor = 0"
             >Servers A</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 1 ? '' : 'secondary'"
+              :variant="selectedFloor === 1 ? null : 'secondary'"
               @click="selectedFloor = 1"
             >Servers B</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 2 ? '' : 'secondary'"
+              :variant="selectedFloor === 2 ? null : 'secondary'"
               @click="selectedFloor = 2"
             >Servers C</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 3 ? '' : 'secondary'"
+              :variant="selectedFloor === 3 ? null : 'secondary'"
               @click="selectedFloor = 3"
             >Servers D</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 4 ? '' : 'secondary'"
+              :variant="selectedFloor === 4 ? null : 'secondary'"
               @click="selectedFloor = 4"
             >Office 1</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 5 ? '' : 'secondary'"
+              :variant="selectedFloor === 5 ? null : 'secondary'"
               @click="selectedFloor = 5"
             >Office 2</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 6 ? '' : 'secondary'"
+              :variant="selectedFloor === 6 ? null : 'secondary'"
               @click="selectedFloor = 6"
             >Office 3</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 7 ? '' : 'secondary'"
+              :variant="selectedFloor === 7 ? null : 'secondary'"
               @click="selectedFloor = 7"
             >Office 4</Badge>
           </div>
           <div>
             <Badge
-              :variant="selectedFloor === 8 ? '' : 'secondary'"
+              :variant="selectedFloor === 8 ? null : 'secondary'"
               @click="selectedFloor = 8"
             >Office 5</Badge>
           </div>

@@ -39,6 +39,10 @@ const { incidents } = storeToRefs(useIncidentsStore())
 const pulsarMarkers = ref<any[]>([])
 const markersLatLngs = [
   {
+    lat: 48.1270264,
+    lng: 9.076881,
+  },
+  {
     lat: 50.0499,
     lng: 10.9876,
   },
@@ -81,23 +85,10 @@ const geomCenter = computed(() => {
   const maxLng = markersLatLngs.find((marker) => {
     return marker.lng === Math.max(...markersLatLngs.map((marker) => marker.lng))
   })
-  const borders = [
-    minLat,
-    maxLat,
-    minLng, 
-    maxLng,
-  ]
-  const num = borders.length
-  const sum = borders.reduce((prev, curr) => {
-    return {
-      lat: prev.lat + curr.lat,
-      lng: prev.lng + curr.lng,
-    }
-  })
 
   return {
-    lat: sum.lat / num,
-    lng: sum.lng / num,
+    lat: (minLat.lat + maxLat.lat) / 2,
+    lng: (minLng.lng + maxLng.lng) / 2,
   }
 })
 
@@ -130,7 +121,7 @@ function onResize() {
 
 function markerPopupClick() {
   router.push({
-    name: 'home',
+    name: 'plans',
   })
 }
 
@@ -164,7 +155,7 @@ function initMap() {
   mapPip.value.addLayer(markers.value)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '',
-  }).addTo(mapPip.value)
+  }).addTo(mapPip.value as Map)
   setTimeout(function () {
     pipVisible.value = false
   }, 100);
@@ -232,7 +223,7 @@ function initMap() {
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '',
-  }).addTo(map.value)
+  }).addTo(map.value as Map)
 
   map.value.addLayer(markers.value)
   map.value.addLayer(pulsars.value)
